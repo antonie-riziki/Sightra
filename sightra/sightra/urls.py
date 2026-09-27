@@ -33,6 +33,7 @@ urlpatterns = [
     path("signup/", signup, name="signup"),
     # Homepage
     path("dashboard", dashboard, name="dashboard"),
+    path("service-worker.js", service_worker, name="service-worker"),
     path("", landing_page, name="landing_page"),
     # Vision 
     path("vision/", vision, name="vision"),

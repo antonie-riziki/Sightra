@@ -1,7 +1,11 @@
 import logging
 import base64
-import cv2
 import numpy as np
+
+try:
+    import cv2
+except ImportError:  # Keep the web UI bootable without the optional vision runtime.
+    cv2 = None
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +39,7 @@ class YoloObjectDetector:
         """
         Runs YOLO object detection on the provided base64 frame.
         """
-        if not self.ready or not image_b64:
+        if not self.ready or not image_b64 or cv2 is None:
             return []
             
         try:
@@ -138,4 +142,3 @@ def analyze_scene(frame_data, text_prompt, device_id=None, language="en"):
             "processing_mode": "camera_frame"
         }
     }
-

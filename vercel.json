@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "sightra/sightra/wsgi.py": {
+    "api/index.py": {
       "maxDuration": 60,
       "excludeFiles": "{**/*.pt,**/tests.py,**/test_*.py,**/__pycache__/**}"
     }

@@ -1,2 +1,14 @@
 # Root dependency shim for Vercel's repository-level Django detection.
--r sightra/requirements.txt
+# Vercel installs the root requirements file for the production function.
+# Keep the web/runtime dependencies explicit here so its Python builder
+# vendors them into the deployment bundle.
+Django>=5.0
+djangorestframework>=3.14.0
+django-filter>=23.5
+celery>=5.3.6
+redis>=5.0.1
+google-generativeai>=0.4.0
+numpy>=1.26.0
+opencv-python-headless>=4.9.0
+python-dotenv>=1.0.0
+livekit-api>=0.5.0

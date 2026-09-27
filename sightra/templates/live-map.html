@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Sightra Spatial Navigation</title>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;700;900&amp;family=Inter:wght@300;400;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet Routing Machine CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "var(--color-primary-fixed-dim)",
+                        "on-tertiary-container": "var(--color-on-tertiary-container)",
+                        "surface-variant": "var(--color-surface-variant)",
+                        "on-primary": "var(--color-on-primary)",
+                        "on-primary-container": "var(--color-on-primary-container)",
+                        "on-error-container": "var(--color-on-error-container)",
+                        "inverse-on-surface": "var(--color-inverse-on-surface)",
+                        "secondary-fixed": "var(--color-secondary-fixed)",
+                        "surface-dim": "var(--color-surface-dim)",
+                        "primary-fixed": "var(--color-primary-fixed)",
+                        "outline": "var(--color-outline)",
+                        "tertiary": "var(--color-tertiary)",
+                        "on-background": "var(--color-on-background)",
+                        "surface-container": "var(--color-surface-container)",
+                        "tertiary-container": "var(--color-tertiary-container)",
+                        "surface-bright": "var(--color-surface-bright)",
+                        "on-secondary-fixed-variant": "var(--color-on-secondary-fixed-variant)",
+                        "on-primary-fixed": "var(--color-on-primary-fixed)",
+                        "on-tertiary-fixed-variant": "var(--color-on-tertiary-fixed-variant)",
+                        "surface-tint": "var(--color-surface-tint)",
+                        "on-secondary-container": "var(--color-on-secondary-container)",
+                        "surface-container-highest": "var(--color-surface-container-highest)",
+                        "tertiary-fixed": "var(--color-tertiary-fixed)",
+                        "secondary": "var(--color-secondary)",
+                        "secondary-container": "var(--color-secondary-container)",
+                        "on-tertiary-fixed": "var(--color-on-tertiary-fixed)",
+                        "surface-container-lowest": "var(--color-surface-container-lowest)",
+                        "background": "var(--color-background)",
+                        "outline-variant": "var(--color-outline-variant)",
+                        "on-secondary-fixed": "var(--color-on-secondary-fixed)",
+                        "secondary-fixed-dim": "var(--color-secondary-fixed-dim)",
+                        "on-surface-variant": "var(--color-on-surface-variant)",
+                        "on-error": "var(--color-on-error)",
+                        "error": "var(--color-error)",
+                        "inverse-primary": "var(--color-inverse-primary)",
+                        "on-primary-fixed-variant": "var(--color-on-primary-fixed-variant)",
+                        "on-tertiary": "var(--color-on-tertiary)",
+                        "on-surface": "var(--color-on-surface)",
+                        "error-container": "var(--color-error-container)",
+                        "inverse-surface": "var(--color-inverse-surface)",
+                        "surface-container-high": "var(--color-surface-container-high)",
+                        "tertiary-fixed-dim": "var(--color-tertiary-fixed-dim)",
+                        "on-secondary": "var(--color-on-secondary)",
+                        "surface-container-low": "var(--color-surface-container-low)",
+                        "primary": "var(--color-primary)",
+                        "surface": "var(--color-surface)",
+                        "primary-container": "var(--color-primary-container)"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Lexend"],
+                        "display": ["Lexend"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        :root {
+            /* Light Mode Default */
+            --color-background: #f8fafc;
+            --color-on-background: #0f172a;
+            --color-surface: #ffffff;
+            --color-on-surface: #0f172a;
+            --color-surface-bright: #ffffff;
+            --color-surface-dim: #f1f5f9;
+            --color-surface-container: #f1f5f9;
+            --color-surface-container-low: #f8fafc;
+            --color-surface-container-high: #e2e8f0;
+            --color-surface-container-highest: #cbd5e1;
+            --color-surface-container-lowest: #ffffff;
+            --color-surface-variant: #e2e8f0;
+            --color-on-surface-variant: #475569;
+            --color-outline: #64748b;
+            --color-outline-variant: #cbd5e1;
+            
+            --color-primary: #006875;
+            --color-on-primary: #ffffff;
+            --color-primary-container: #e0f7fa;
+            --color-on-primary-container: #002024;
+            --color-primary-fixed: #9cf0ff;
+            --color-primary-fixed-dim: #00daf3;
+
+            --color-secondary: #00e5ff;
+            --color-on-secondary: #00363d;
+            --color-secondary-container: #c3f400;
+            --color-on-secondary-container: #161e00;
+            --color-secondary-fixed: #c3f400;
+            --color-on-secondary-fixed: #161e00;
+            --color-secondary-fixed-dim: #abd600;
+            --color-on-secondary-fixed-variant: #3c4d00;
+
+            --color-error: #ba1a1a;
+            --color-on-error: #ffffff;
+            --color-error-container: #ffdad6;
+            --color-on-error-container: #410002;
+            
+            --color-inverse-surface: #1e293b;
+            --color-inverse-on-surface: #f8fafc;
+            --color-inverse-primary: #00e5ff;
+            
+            --color-tertiary: #b5a300;
+            --color-on-tertiary: #ffffff;
+            --color-tertiary-container: #fff59d;
+            --color-on-tertiary-container: #332d00;
+            --color-tertiary-fixed: #ffdf96;
+            --color-on-tertiary-fixed: #251a00;
+            --color-tertiary-fixed-dim: #f3bf26;
+            --color-on-tertiary-fixed-variant: #594400;
+        }
+
+        html.dark {
+            /* Dark Mode (from original config values) */
+            --color-background: #131313;
+            --color-on-background: #e5e2e1;
+            --color-surface: #131313;
+            --color-on-surface: #e5e2e1;
+            --color-surface-bright: #393939;
+            --color-surface-dim: #131313;
+            --color-surface-container: #201f1f;
+            --color-surface-container-low: #1c1b1b;
+            --color-surface-container-high: #2a2a2a;
+            --color-surface-container-highest: #353534;
+            --color-surface-container-lowest: #0e0e0e;
+            --color-surface-variant: #353534;
+            --color-on-surface-variant: #bac9cc;
+            --color-outline: #849396;
+            --color-outline-variant: #3b494c;
+            
+            --color-primary: #c3f5ff;
+            --color-on-primary: #00363d;
+            --color-primary-container: #00e5ff;
+            --color-on-primary-container: #00626e;
+            --color-primary-fixed: #9cf0ff;
+            --color-primary-fixed-dim: #00daf3;
+
+            --color-secondary: #ffffff;
+            --color-on-secondary: #283500;
+            --color-secondary-container: #c3f400;
+            --color-on-secondary-container: #556d00;
+            --color-secondary-fixed: #c3f400;
+            --color-on-secondary-fixed: #161e00;
+            --color-secondary-fixed-dim: #abd600;
+            --color-on-secondary-fixed-variant: #3c4d00;
+
+            --color-error: #ffb4ab;
+            --color-on-error: #690005;
+            --color-error-container: #93000a;
+            --color-on-error-container: #ffdad6;
+            
+            --color-inverse-surface: #e5e2e1;
+            --color-inverse-on-surface: #313030;
+            --color-inverse-primary: #006875;
+            
+            --color-tertiary: #ffeac0;
+            --color-on-tertiary: #3e2e00;
+            --color-tertiary-container: #fec931;
+            --color-on-tertiary-container: #6f5500;
+            --color-tertiary-fixed: #ffdf96;
+            --color-on-tertiary-fixed: #251a00;
+            --color-tertiary-fixed-dim: #f3bf26;
+            --color-on-tertiary-fixed-variant: #594400;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-on-background);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .ar-path-overlay {
+            background: linear-gradient(to top, rgba(195, 244, 0, 0.4) 0%, transparent 100%);
+            clip-path: polygon(45% 100%, 55% 100%, 80% 0%, 20% 0%);
+            transform: perspective(500px) rotateX(60deg) translateY(-20%);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+    <!-- TopAppBar -->
+    <header
+        class="fixed top-0 w-full z-50 bg-white/80 dark:bg-[#131313]/80 backdrop-blur-xl border-b border-outline-variant/10 dark:border-[#00E5FF]/20 flex justify-between items-center px-6 h-16 shadow-sm dark:shadow-[0_0_20px_rgba(0,229,255,0.1)]">
+        <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <span class="material-symbols-outlined text-[#00E5FF] text-2xl" data-icon="visibility">visibility</span>
+            <h1
+                class="font-['Lexend'] tracking-widest uppercase font-bold text-xl md:text-2xl font-black text-[#00E5FF] tracking-tighter">
+                Sightra</h1>
+        </a>
+
+        <div class="flex items-center gap-4">
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex items-center gap-8" id="desktopNav">
+                <a href="/" data-target="/"
+                    class="nav-link flex items-center gap-2 text-on-surface-variant dark:text-[#BAC9CC] hover:text-[#00E5FF] transition-colors font-medium text-sm">
+                    <span class="material-symbols-outlined text-[20px]">home</span>
+                    Home
+                </a>
+                <a href="/vision/" data-target="/vision"
+                    class="nav-link flex items-center gap-2 text-on-surface-variant dark:text-[#BAC9CC] hover:text-[#00E5FF] transition-colors font-medium text-sm">
+                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    Vision
+                </a>
+                <a href="/live-map/" data-target="/map"
+                    class="nav-link flex items-center gap-2 text-on-surface-variant dark:text-[#BAC9CC] hover:text-[#00E5FF] transition-colors font-medium text-sm">
+                    <span class="material-symbols-outlined text-[20px]">map</span>
+                    Map
+                </a>
+                <a href="/voice_assistant/" data-target="/voice_assistant"
+                    class="nav-link flex items-center gap-2 text-on-surface-variant dark:text-[#BAC9CC] hover:text-[#00E5FF] transition-colors font-medium text-sm">
+                    <span class="material-symbols-outlined text-[20px]">mic</span>
+                    Voice
+                </a>
+                <a href="/settings/" data-target="/settings"
+                    class="nav-link flex items-center gap-2 text-on-surface-variant dark:text-[#BAC9CC] hover:text-[#00E5FF] transition-colors font-medium text-sm">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    Settings
+                </a>
+            </nav>
+
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="p-2 rounded-xl text-on-surface hover:bg-surface-container-high/50 active:scale-95 transition-all flex items-center justify-center" title="Toggle Theme">
+                <span class="material-symbols-outlined text-2xl" id="theme-toggle-icon">dark_mode</span>
+            </button>
+        </div>
+    </header>
+    <!-- Main Viewport (Live Map View) -->
+    <main class="relative h-screen w-full overflow-hidden bg-surface-container-lowest">
+        <!-- Interactive Map Container -->
+        <div id="map" class="absolute inset-0 z-0"></div>
+
+        <!-- Navigation Routing Panel (Top Anchor) -->
+        <div class="absolute top-20 left-4 right-4 md:top-24 md:left-6 md:w-[420px] z-20 transition-all duration-300 pointer-events-none"
+            id="route-panel">
+            <div
+                class="bg-surface-container-high/90 backdrop-blur-xl rounded-xl p-4 md:p-6 shadow-[0_40px_100px_rgba(0,0,0,0.5)] pointer-events-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="font-headline text-primary-container text-base md:text-lg font-bold">Set Navigation</h2>
+                    <button id="toggle-route-panel" class="md:hidden text-on-surface-variant">
+                        <span class="material-symbols-outlined">expand_less</span>
+                    </button>
+                </div>
+                <div id="route-inputs" class="flex flex-col gap-3">
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-3 text-on-surface-variant text-xl">my_location</span>
+                        <input type="text" id="start-location" autocomplete="off" placeholder="Start location"
+                            class="w-full bg-surface-container-highest text-on-surface py-2.5 pl-10 pr-10 rounded-lg border border-outline-variant focus:border-primary-container focus:outline-none transition-colors text-sm placeholder:text-on-surface-variant/60" />
+                        <button id="use-gps-btn"
+                            class="absolute right-3 top-2.5 text-primary-container hover:text-primary transition-colors"
+                            title="Use My Location">
+                            <span class="material-symbols-outlined text-sm">gps_fixed</span>
+                        </button>
+                        <div id="start-suggestions"
+                            class="absolute w-full mt-1 bg-surface-container-highest border border-outline-variant rounded-lg shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-3 text-on-surface-variant text-xl">location_on</span>
+                        <input type="text" id="end-location" autocomplete="off" placeholder="Destination"
+                            class="w-full bg-surface-container-highest text-on-surface py-2.5 pl-10 pr-4 rounded-lg border border-outline-variant focus:border-primary-container focus:outline-none transition-colors text-sm placeholder:text-on-surface-variant/60" />
+                        <div id="end-suggestions"
+                            class="absolute w-full mt-1 bg-surface-container-highest border border-outline-variant rounded-lg shadow-xl z-30 hidden max-h-48 overflow-y-auto">
+                        </div>
+                    </div>
+                    <button id="get-directions-btn"
+                        class="w-full mt-1 bg-primary-container text-on-primary-container font-bold py-2.5 rounded-lg hover:bg-primary transition-colors flex items-center justify-center gap-2 text-sm">
+                        <span class="material-symbols-outlined text-lg">directions</span>
+                        Get Directions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Turn-by-turn Instruction (Hidden initially) -->
+            <div id="turn-instruction-panel" style="display: none;"
+                class="mt-3 bg-surface-container-high/90 backdrop-blur-xl rounded-xl p-4 items-center gap-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] pointer-events-auto">
+                <div class="h-10 w-10 bg-secondary-container flex items-center justify-center rounded-lg shrink-0">
+                    <span id="turn-icon"
+                        class="material-symbols-outlined text-on-secondary-container text-xl font-bold">straight</span>
+                </div>
+                <div class="min-w-0">
+                    <p id="turn-text"
+                        class="font-display text-primary-container text-sm font-bold tracking-tight truncate">Continue
+                        Straight</p>
+                    <p id="turn-distance" class="font-body text-on-surface-variant text-[10px] flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[10px]">straighten</span>
+                        <span>--</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Metadata Window (Bottom Float) -->
+        <div class="absolute bottom-24 left-4 right-4 z-20 md:bottom-32 md:right-6 md:w-[420px] md:left-auto pointer-events-none transition-all duration-300"
+            id="stats-panel" style="display: none;">
+            <div
+                class="bg-surface-container-lowest/90 backdrop-blur-2xl rounded-xl p-4 md:p-8 border-l-4 border-primary-container shadow-2xl pointer-events-auto">
+                <div class="flex justify-between items-center md:hidden mb-4">
+                    <span class="text-[10px] font-bold text-primary-container uppercase tracking-widest">Route
+                        Summary</span>
+                    <button id="toggle-stats-panel" class="text-on-surface-variant">
+                        <span class="material-symbols-outlined">expand_less</span>
+                    </button>
+                </div>
+                <div id="stats-content">
+                    <div class="grid grid-cols-3 gap-4 md:gap-8">
+                        <div class="flex flex-col gap-1">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Distance</span>
+                            <div class="flex items-baseline gap-1">
+                                <span id="stat-distance"
+                                    class="font-display text-lg md:text-2xl font-black text-on-surface">--</span>
+                                <span class="text-[10px] font-bold text-primary-container">KM</span>
+                            </div>
+                        </div>
+                        <div class="flex items-baseline gap-1 self-center justify-center col-span-1">
+                            <div class="flex flex-col gap-1 items-center">
+                                <span
+                                    class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Arrival</span>
+                                <span id="stat-arrival"
+                                    class="font-display text-lg md:text-2xl font-black text-on-surface">--:--</span>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1 items-end">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Time</span>
+                            <div class="flex items-baseline gap-1">
+                                <span id="stat-duration"
+                                    class="font-display text-lg md:text-2xl font-black text-on-surface">--</span>
+                                <span class="text-[10px] font-bold text-primary-container">MIN</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-outline-variant/20">
+                        <h3 id="stat-destination-name"
+                            class="font-headline text-primary-container text-xs md:text-sm font-bold mb-1 truncate">
+                            Navigation Active</h3>
+                        <p class="text-on-surface-variant text-[10px] md:text-xs leading-relaxed">Follow the highlighted
+                            path on the map.
+                            Rerouting is enabled.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    {% include 'bottom_nav.html' %}
+</body>
+
+<!-- Leaflet & Routing JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<script>
+    // Map styling specifically for dark mode and hiding default controls
+    document.head.insertAdjacentHTML('beforeend', `<style>
+        html.dark .leaflet-layer, 
+        html.dark .leaflet-control-zoom-in, 
+        html.dark .leaflet-control-zoom-out, 
+        html.dark .leaflet-control-attribution {
+            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        }
+        .leaflet-routing-container {
+            display: none !important;
+        }
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            color: var(--color-on-surface);
+            transition: background 0.2s;
+        }
+        html.dark .suggestion-item {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #e5e2e1;
+        }
+        .suggestion-item:hover {
+            background: rgba(0, 229, 255, 0.15);
+            color: #00E5FF;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+    </style>`);
+
+    // Initialize Map
+    const map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([-1.2921, 36.8219], 13); // Default Nairobi
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+    }).addTo(map);
+
+    let routingControl = null;
+    let userLocation = null;
+
+    const startInput = document.getElementById('start-location');
+    const endInput = document.getElementById('end-location');
+    const getDirectionsBtn = document.getElementById('get-directions-btn');
+    const useGpsBtn = document.getElementById('use-gps-btn');
+    const startSuggestions = document.getElementById('start-suggestions');
+    const endSuggestions = document.getElementById('end-suggestions');
+
+    const statsPanel = document.getElementById('stats-panel');
+    const statDistance = document.getElementById('stat-distance');
+    const statArrival = document.getElementById('stat-arrival');
+    const statDuration = document.getElementById('stat-duration');
+    const statDestName = document.getElementById('stat-destination-name');
+    const statsContent = document.getElementById('stats-content');
+
+    const turnInstructionPanel = document.getElementById('turn-instruction-panel');
+    const turnText = document.getElementById('turn-text');
+    const turnDistance = document.getElementById('turn-distance');
+    const turnIcon = document.getElementById('turn-icon');
+
+    // Mobile Toggle Panels
+    const routeInputs = document.getElementById('route-inputs');
+    const toggleRouteBtn = document.getElementById('toggle-route-panel');
+    const toggleStatsBtn = document.getElementById('toggle-stats-panel');
+
+    toggleRouteBtn.addEventListener('click', () => {
+        const isHidden = routeInputs.classList.toggle('hidden');
+        toggleRouteBtn.querySelector('span').innerText = isHidden ? 'expand_more' : 'expand_less';
+    });
+
+    toggleStatsBtn.addEventListener('click', () => {
+        const isHidden = statsContent.classList.toggle('hidden');
+        toggleStatsBtn.querySelector('span').innerText = isHidden ? 'expand_more' : 'expand_less';
+    });
+
+    // Geolocation
+    useGpsBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+            startInput.value = "Locating...";
+            startInput.disabled = true;
+            navigator.geolocation.getCurrentPosition(position => {
+                userLocation = L.latLng(position.coords.latitude, position.coords.longitude);
+                startInput.value = "Your Location";
+                startInput.disabled = false;
+                map.setView(userLocation, 15);
+                L.circleMarker(userLocation, { radius: 8, color: '#00E5FF', fillOpacity: 0.8 }).addTo(map);
+            }, err => {
+                startInput.value = "";
+                startInput.disabled = false;
+                alert("Unable to retrieve location.");
+            });
+        }
+    });
+
+    // Autocomplete Logic
+    const fetchSuggestions = async (query, container) => {
+        if (query.length < 3 || query === "Your Location") {
+            container.classList.add('hidden');
+            return;
+        }
+
+        let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`;
+        if (userLocation) {
+            const viewbox = `${userLocation.lng - 2},${userLocation.lat + 2},${userLocation.lng + 2},${userLocation.lat - 2}`;
+            url += `&viewbox=${viewbox}&bounded=0`;
+        }
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data.length > 0) {
+                container.innerHTML = '';
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    div.innerText = item.display_name;
+                    div.addEventListener('click', () => {
+                        const input = container.id === 'start-suggestions' ? startInput : endInput;
+                        input.value = item.display_name;
+                        input.dataset.lat = item.lat;
+                        input.dataset.lon = item.lon;
+                        container.classList.add('hidden');
+                    });
+                    container.appendChild(div);
+                });
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        } catch (e) {
+            console.error("Autocomplete failed", e);
+        }
+    };
+
+    let startTimeout, endTimeout;
+    startInput.addEventListener('input', () => {
+        clearTimeout(startTimeout);
+        startTimeout = setTimeout(() => fetchSuggestions(startInput.value, startSuggestions), 400);
+    });
+
+    endInput.addEventListener('input', () => {
+        clearTimeout(endTimeout);
+        endTimeout = setTimeout(() => fetchSuggestions(endInput.value, endSuggestions), 400);
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!startInput.contains(e.target)) startSuggestions.classList.add('hidden');
+        if (!endInput.contains(e.target)) endSuggestions.classList.add('hidden');
+    });
+
+    // Geocoding Helper
+    const geocode = async (input) => {
+        if (input.value === "Your Location" && userLocation) return userLocation;
+        if (input.dataset.lat && input.dataset.lon) return L.latLng(input.dataset.lat, input.dataset.lon);
+        try {
+            let url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input.value)}&limit=1`;
+            if (userLocation) {
+                const viewbox = `${userLocation.lng - 1},${userLocation.lat + 1},${userLocation.lng + 1},${userLocation.lat - 1}`;
+                url += `&viewbox=${viewbox}&bounded=0`;
+            }
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data && data.length > 0) return L.latLng(data[0].lat, data[0].lon);
+        } catch (e) { console.error("Geocoding failed", e); }
+        return null;
+    };
+
+    // Routing
+    getDirectionsBtn.addEventListener('click', async () => {
+        if (!startInput.value || !endInput.value) return alert("Please set both locations.");
+        getDirectionsBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">refresh</span> Searching...';
+        getDirectionsBtn.disabled = true;
+
+        const startLatLng = await geocode(startInput);
+        const endLatLng = await geocode(endInput);
+
+        if (!startLatLng || !endLatLng) {
+            getDirectionsBtn.innerHTML = '<span class="material-symbols-outlined">directions</span> Get Directions';
+            getDirectionsBtn.disabled = false;
+            return alert("Could not locate one or both points. Please use the suggestions.");
+        }
+
+        if (routingControl) map.removeControl(routingControl);
+
+        routingControl = L.Routing.control({
+            waypoints: [startLatLng, endLatLng],
+            routeWhileDragging: true,
+            show: false,
+            lineOptions: { styles: [{ color: '#00daf3', opacity: 0.9, weight: 6 }] },
+            createMarker: (i, wp) => L.marker(wp.latLng, {
+                icon: L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div style="background: ${i === 0 ? '#C3F400' : '#FF3D00'}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
+                    iconSize: [12, 12],
+                    iconAnchor: [6, 6]
+                })
+            })
+        }).addTo(map);
+
+        routingControl.on('routesfound', function (e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            statDistance.innerText = (summary.totalDistance / 1000).toFixed(1);
+            statDuration.innerText = Math.round(summary.totalTime / 60);
+            const arrivalTime = new Date(new Date().getTime() + summary.totalTime * 1000);
+            statArrival.innerText = arrivalTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            statDestName.innerText = endInput.value.split(',')[0].toUpperCase();
+            statsPanel.style.display = 'block';
+
+            if (routes[0].instructions && routes[0].instructions.length > 0) {
+                turnInstructionPanel.style.display = 'flex';
+                const inst = routes[0].instructions[0];
+                turnText.innerText = inst.text;
+                turnDistance.innerText = inst.distance < 1000 ? Math.round(inst.distance) + ' m' : (inst.distance / 1000).toFixed(1) + ' km';
+                if (inst.type === 'Straight') turnIcon.innerText = 'straight';
+                else if (inst.type === 'Left') turnIcon.innerText = 'turn_left';
+                else if (inst.type === 'Right') turnIcon.innerText = 'turn_right';
+                else if (inst.type === 'DestinationReached') turnIcon.innerText = 'location_on';
+                else turnIcon.innerText = 'turn_slight_right';
+            }
+            getDirectionsBtn.innerHTML = '<span class="material-symbols-outlined">directions</span> Update Route';
+            getDirectionsBtn.disabled = false;
+            if (window.innerWidth < 768) {
+                routeInputs.classList.add('hidden');
+                toggleRouteBtn.querySelector('span').innerText = 'expand_more';
+            }
+        });
+
+        routingControl.on('routingerror', () => {
+            alert("Routing failed. Try different points.");
+            getDirectionsBtn.innerHTML = '<span class="material-symbols-outlined">directions</span> Get Directions';
+            getDirectionsBtn.disabled = false;
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function updateToggleUI(isDark) {
+            if (themeToggleIcon) {
+                themeToggleIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+            }
+        }
+
+        const isDark = document.documentElement.classList.contains('dark');
+        updateToggleUI(isDark);
+
+        if (themeToggleBtn) {
+            themeToggleBtn.addEventListener('click', () => {
+                const currentIsDark = document.documentElement.classList.contains('dark');
+                if (currentIsDark) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    updateToggleUI(false);
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    updateToggleUI(true);
+                }
+                window.dispatchEvent(new Event('themechange'));
+            });
+        }
+    });
+</script>
+</html>

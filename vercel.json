@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pip install -r requirements.txt",
+  "functions": {
+    "sightra/sightra/wsgi.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{**/*.pt,**/tests.py,**/test_*.py,**/__pycache__/**}"
+    }
+  }
+}

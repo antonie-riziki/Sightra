@@ -1,0 +1,2 @@
+# Root dependency shim for Vercel's repository-level Django detection.
+-r sightra/requirements.txt
